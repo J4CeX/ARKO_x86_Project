@@ -1,0 +1,60 @@
+     1                                  section .text
+     2                                  global colormask
+     3                                  
+     4                                  colormask:
+     5 00000000 55                          push ebp
+     6 00000001 89E5                        mov ebp, esp
+     7 00000003 53                          push ebx
+     8 00000004 56                          push esi
+     9 00000005 57                          push edi
+    10 00000006 83EC04                      sub esp, 4              ; miejsce na lokalne y
+    11                                  
+    12 00000009 8B4D08                      mov ecx, [ebp + 8]      ; ecx = img
+    13 0000000C 8B5514                      mov edx, [ebp + 20]     ; edx = mask_img
+    14 0000000F 8B7520                      mov esi, [ebp + 32]     ; esi = x
+    15 00000012 8B4524                      mov eax, [ebp + 36]     ; eax = y
+    16 00000015 890424                      mov [esp], eax          ; zapisujemy y na stosie
+    17                                  
+    18                                  mask:
+    19 00000018 8B5D0C                      mov ebx, [ebp + 12]     ; width
+    20 0000001B 39DE                        cmp esi, ebx
+    21 0000001D 742D                        je next_row
+    22                                  
+    23 0000001F 8B0424                      mov eax, [esp]          ; y
+    24 00000022 8B5D1C                      mov ebx, [ebp + 28]     ; mask_height
+    25 00000025 4B                          dec ebx
+    26 00000026 29C3                        sub ebx, eax            ; mask_y = mask_height - 1 - y
+    27                                  
+    28 00000028 8B4518                      mov eax, [ebp + 24]     ; mask_width
+    29 0000002B 0FAFD8                      imul ebx, eax           ; mask_y * mask_width
+    30 0000002E 01F3                        add ebx, esi            ; + x
+    31 00000030 6BDB03                      imul ebx, 3             ; offset w bajtach
+    32                                  
+    33                                      ; kopiuj kolor z maski do obrazu
+    34 00000033 8A041A                      mov al, [edx + ebx]
+    35 00000036 880419                      mov [ecx + ebx], al
+    36 00000039 8A441A01                    mov al, [edx + ebx + 1]
+    37 0000003D 88441901                    mov [ecx + ebx + 1], al
+    38 00000041 8A441A02                    mov al, [edx + ebx + 2]
+    39 00000045 88441902                    mov [ecx + ebx + 2], al
+    40                                  
+    41 00000049 46                          inc esi
+    42 0000004A EBCC                        jmp mask
+    43                                  
+    44                                  next_row:
+    45 0000004C BE00000000                  mov esi, 0
+    46 00000051 8B0424                      mov eax, [esp]
+    47 00000054 40                          inc eax
+    48 00000055 890424                      mov [esp], eax
+    49                                  
+    50 00000058 8B5D10                      mov ebx, [ebp + 16]     ; height
+    51 0000005B 39D8                        cmp eax, ebx
+    52 0000005D 7CB9                        jl mask
+    53                                  
+    54                                  exit:
+    55 0000005F 83C404                      add esp, 4
+    56 00000062 5F                          pop edi
+    57 00000063 5E                          pop esi
+    58 00000064 5B                          pop ebx
+    59 00000065 5D                          pop ebp
+    60 00000066 C3                          ret
