@@ -7,22 +7,32 @@ colormask:
     push ebx
     push esi
     push edi
-    sub esp, 4              ; miejsce na lokalne y
+
+    ; [ebp + 8] = img (void *)
+    ; [ebp + 12] = width (uint32_t)
+    ; [ebp + 16] = height (uint32_t)
+    ; [ebp + 20] = mask_img (void *)
+    ; [ebp + 24] = mask_width (uint32_t)
+    ; [ebp + 28] = mask_height (uint32_t)
+    ; [ebp + 32] = x (uint32_t)
+    ; [ebp + 36] = y (uint32_t)
+    ; [ebp + 40] = color1 (uint32_t)
+    ; [ebp + 44] = color2 (uint32_t)
+    ; [ebp + 48] = color3 (uint32_t)
 
     mov ecx, [ebp + 8]      ; ecx = img
     mov edx, [ebp + 20]     ; edx = mask_img
     mov esi, [ebp + 32]     ; esi = x
     mov eax, [ebp + 36]     ; eax = y
-    mov [esp], eax          ; zapisujemy y na stosie
 
 mask:
     mov ebx, [ebp + 12]     ; width
-    cmp esi, ebx
+    cmp esi, ebx            ; if x = width then next_row
     je next_row
 
-    mov eax, [esp]          ; y
-    mov ebx, [ebp + 28]     ; mask_height
-    dec ebx
+    mov eax, [ebp + 36]     ; eax = y
+    mov ebx, [ebp + 28]     ; ebx = mask_height
+    dec ebx                 ; ebx -= 1
     sub ebx, eax            ; mask_y = mask_height - 1 - y
 
     mov eax, [ebp + 24]     ; mask_width
@@ -30,29 +40,28 @@ mask:
     add ebx, esi            ; + x
     imul ebx, 3             ; offset w bajtach
 
-    ; kopiuj kolor z maski do obrazu
-    mov al, [edx + ebx]
-    mov [ecx + ebx], al
-    mov al, [edx + ebx + 1]
-    mov [ecx + ebx + 1], al
-    mov al, [edx + ebx + 2]
-    mov [ecx + ebx + 2], al
+    ; kopiowanie koloru z maski do obrazu
+    mov al, [edx + ebx]     ; save B of pixel in mask_img to al
+    mov [ecx + ebx], al     ; save B of pixel in mask as al
+    mov al, [edx + ebx + 1] ; save G of pixel in mask_img to al
+    mov [ecx + ebx + 1], al ; save G of pixel in mask as al
+    mov al, [edx + ebx + 2] ; save R of pixel in mask_img to al
+    mov [ecx + ebx + 2], al ; save R of pixel in mask as al
 
-    inc esi
+    inc esi     ; increment x
     jmp mask
 
 next_row:
-    mov esi, 0
-    mov eax, [esp]
-    inc eax
-    mov [esp], eax
+    mov esi, [ebp + 32]     ; set current x as given x
+    mov eax, [ebp + 36]     ; eax = y
+    inc eax                 ; inc y
+    mov [ebp + 36], eax     ; save y
 
     mov ebx, [ebp + 16]     ; height
-    cmp eax, ebx
+    cmp eax, ebx            ; if y = height then mask
     jl mask
 
 exit:
-    add esp, 4
     pop edi
     pop esi
     pop ebx
