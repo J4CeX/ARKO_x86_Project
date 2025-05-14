@@ -7,6 +7,7 @@ colormask:
     push ebx
     push esi
     push edi
+    sub esp, 8
 
     ; [ebp + 8] = img (void *)
     ; [ebp + 12] = width (uint32_t)
@@ -20,10 +21,11 @@ colormask:
     ; [ebp + 44] = color2 (uint32_t)
     ; [ebp + 48] = color3 (uint32_t)
 
-    mov ecx, [ebp + 8]      ; ecx = img
-    mov edx, [ebp + 20]     ; edx = mask_img
-    mov esi, [ebp + 32]     ; esi = x
-    mov edi, 0              ; edi = x_mask
+    mov esi, [ebp + 32]     ; esi = current x
+
+    mov dword [esp + 0], 0  ; x_mask
+    mov dword [esp + 4], 0  ; y_mask
+
 
 mask:
     mov eax, [ebp + 24]     ; eax = mask_width
@@ -36,13 +38,10 @@ mask:
 
     mov edi, [ebp + 36]     ; edi = current y
 
-    mov eax, [ebp + 36]
     mov ebx, [ebp + 16]     ; ebx = height
     dec ebx                 ; ebx -= 1
-    sub ebx, eax            ; mask_y = height - 1 - y
-
-    mov eax, [ebp + 12]     ; width
-    imul ebx, eax           ; mask_y * width
+    sub ebx, edi            ; y = height - 1 - y
+    imul ebx, [ebp + 12]    ; y * width
     add ebx, esi            ; + x
     imul ebx, 3             ; offset w bajtach
 
@@ -56,9 +55,6 @@ mask:
     imul eax, 3             ; offset w bajtach
 
     mov edi, eax
-
-
-    mov eax,
 
 
     ; kopiowanie koloru z maski do obrazu
@@ -79,23 +75,28 @@ mask:
 
 next_row:
     mov esi, [ebp + 32]     ; set current x as given x
+    mov dword [esp + 0], 0  ; set current x_mask as given x_mask
+
     mov eax, [ebp + 36]
     inc eax                 ; inc y
     mov [ebp + 36], eax
 
+    mov eax, [esp + 4]
+    inc eax                 ; inc y_mask
+    mov [esp + 4], eax
+
     mov ebx, [ebp + 16]     ; height
-    cmp eax, ebx            ; if y = height then mask else exit
-    jl mask
+    cmp [ebp + 36], ebx            ; if y = height then mask else exit
     jge exit
 
     mov ebx, [ebp + 28]     ; mask_height
-    cmp eax, ebx            ; if y = mask_height then mask else exit
-    jl mask
+    cmp [esp + 4], ebx            ; if y_mask = mask_height then mask else exit
     jge exit
 
     jmp mask
 
 exit:
+    add esp, 8
     pop edi
     pop esi
     pop ebx
