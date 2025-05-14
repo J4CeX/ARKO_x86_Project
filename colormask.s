@@ -27,12 +27,14 @@ colormask:
 
 mask:
     mov eax, [ebp + 24]     ; eax = mask_width
-    cmp esi, eax            ; if x = mask_width then next_row
-    je next_row
+    cmp [esp + 0], eax            ; if x_mask = mask_width then next_row
+    jge next_row
 
     mov eax, [ebp + 12]     ; eax = width
     cmp esi, eax            ; if x = width then next_row
-    je next_row
+    jge next_row
+
+    mov edi, [ebp + 36]     ; edi = current y
 
     mov eax, [ebp + 36]
     mov ebx, [ebp + 16]     ; ebx = height
@@ -44,19 +46,35 @@ mask:
     add ebx, esi            ; + x
     imul ebx, 3             ; offset w bajtach
 
+    mov edi, [esp + 4]
+
+    mov eax, [ebp + 28]     ; eax = mask_height
+    dec eax                 ; eax -= 1
+    sub eax, edi            ; y_mask = mask_height - 1 - y
+    imul eax, [ebp + 24]    ; y_mask * mask_width
+    add eax, [esp + 0]      ; + x_mask
+    imul eax, 3             ; offset w bajtach
+
+    mov edi, eax
+
 
     mov eax,
 
 
     ; kopiowanie koloru z maski do obrazu
-    mov al, [edx + ebx]     ; save B of pixel in mask_img to al
+    mov ecx, [ebp + 8]      ; ecx = img
+    mov edx, [ebp + 20]     ; edx = mask_img
+    mov al, [edx + edi]     ; save B of pixel in mask_img to al
     mov [ecx + ebx], al     ; save B of pixel in mask as al
-    mov al, [edx + ebx + 1] ; save G of pixel in mask_img to al
+    mov al, [edx + edi + 1] ; save G of pixel in mask_img to al
     mov [ecx + ebx + 1], al ; save G of pixel in mask as al
-    mov al, [edx + ebx + 2] ; save R of pixel in mask_img to al
+    mov al, [edx + edi + 2] ; save R of pixel in mask_img to al
     mov [ecx + ebx + 2], al ; save R of pixel in mask as al
 
     inc esi     ; increment x
+    mov eax, [esp + 0]
+    inc eax             ; increment x_mask
+    mov [esp + 0], eax
     jmp mask
 
 next_row:
@@ -74,6 +92,8 @@ next_row:
     cmp eax, ebx            ; if y = mask_height then mask else exit
     jl mask
     jge exit
+
+    jmp mask
 
 exit:
     pop edi
