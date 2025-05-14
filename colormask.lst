@@ -21,62 +21,84 @@
     21                                      ; [ebp + 44] = color2 (uint32_t)
     22                                      ; [ebp + 48] = color3 (uint32_t)
     23                                  
-    24 00000009 8B4D08                      mov ecx, [ebp + 8]      ; ecx = img
-    25 0000000C 8B5514                      mov edx, [ebp + 20]     ; edx = mask_img
-    26 0000000F 8B7520                      mov esi, [ebp + 32]     ; esi = x
-    27 00000012 8B7D24                      mov edi, [ebp + 36]     ; edi = y
+    24 00000009 8B7520                      mov esi, [ebp + 32]     ; esi = current x
+    25                                  
+    26 0000000C C7042400000000              mov dword [esp + 0], 0  ; x_mask
+    27 00000013 C744240400000000            mov dword [esp + 4], 0  ; y_mask
     28                                  
-    29 00000015 C7042400000000              mov dword [esp + 0], 0
-    30 0000001C C744240400000000            mov dword [esp + 4], 0
-    31                                  
-    32                                  mask:
-    33 00000024 8B4518                      mov eax, [ebp + 24]     ; eax = mask_width
-    34 00000027 39C6                        cmp esi, eax            ; if x = mask_width then next_row
-    35 00000029 7431                        je next_row
-    36                                  
-    37 0000002B 8B450C                      mov eax, [ebp + 12]     ; eax = width
-    38 0000002E 39C6                        cmp esi, eax            ; if x = width then next_row
-    39 00000030 742A                        je next_row
+    29                                  
+    30                                  mask:
+    31 0000001B 8B4518                      mov eax, [ebp + 24]     ; eax = mask_width
+    32 0000001E 390424                      cmp [esp + 0], eax            ; if x_mask = mask_width then next_row
+    33 00000021 7D55                        jge next_row
+    34                                  
+    35 00000023 8B450C                      mov eax, [ebp + 12]     ; eax = width
+    36 00000026 39C6                        cmp esi, eax            ; if x = width then next_row
+    37 00000028 7D4E                        jge next_row
+    38                                  
+    39 0000002A 8B7D24                      mov edi, [ebp + 36]     ; edi = current y
     40                                  
-    41 00000032 8B5D10                      mov ebx, [ebp + 16]     ; ebx = height
-    42 00000035 4B                          dec ebx                 ; ebx -= 1
-    43 00000036 29FB                        sub ebx, edi            ; mask_y = height - 1 - y
-    44                                  
-    45 00000038 8B450C                      mov eax, [ebp + 12]     ; width
-    46 0000003B 0FAFD8                      imul ebx, eax           ; mask_y * width
-    47 0000003E 01F3                        add ebx, esi            ; + x
-    48 00000040 6BDB03                      imul ebx, 3             ; offset w bajtach
+    41 0000002D 8B5D10                      mov ebx, [ebp + 16]     ; ebx = height
+    42 00000030 4B                          dec ebx                 ; ebx -= 1
+    43 00000031 29FB                        sub ebx, edi            ; y = height - 1 - y
+    44 00000033 0FAF5D0C                    imul ebx, [ebp + 12]    ; y * width
+    45 00000037 01F3                        add ebx, esi            ; + x
+    46 00000039 6BDB03                      imul ebx, 3             ; offset w bajtach
+    47                                  
+    48 0000003C 8B7C2404                    mov edi, [esp + 4]
     49                                  
-    50                                  
-    51                                      ; kopiowanie koloru z maski do obrazu
-    52 00000043 8A041A                      mov al, [edx + ebx]     ; save B of pixel in mask_img to al
-    53 00000046 880419                      mov [ecx + ebx], al     ; save B of pixel in mask as al
-    54 00000049 8A441A01                    mov al, [edx + ebx + 1] ; save G of pixel in mask_img to al
-    55 0000004D 88441901                    mov [ecx + ebx + 1], al ; save G of pixel in mask as al
-    56 00000051 8A441A02                    mov al, [edx + ebx + 2] ; save R of pixel in mask_img to al
-    57 00000055 88441902                    mov [ecx + ebx + 2], al ; save R of pixel in mask as al
+    50 00000040 8B451C                      mov eax, [ebp + 28]     ; eax = mask_height
+    51 00000043 48                          dec eax                 ; eax -= 1
+    52 00000044 29F8                        sub eax, edi            ; y_mask = mask_height - 1 - y
+    53 00000046 0FAF4518                    imul eax, [ebp + 24]    ; y_mask * mask_width
+    54 0000004A 030424                      add eax, [esp + 0]      ; + x_mask
+    55 0000004D 6BC003                      imul eax, 3             ; offset w bajtach
+    56                                  
+    57 00000050 89C7                        mov edi, eax
     58                                  
-    59 00000059 46                          inc esi     ; increment x
-    60 0000005A EBC8                        jmp mask
-    61                                  
-    62                                  next_row:
-    63 0000005C 8B7520                      mov esi, [ebp + 32]     ; set current x as given x
-    64 0000005F 47                          inc edi                 ; inc y
-    65                                  
-    66 00000060 8B5D10                      mov ebx, [ebp + 16]     ; height
-    67 00000063 39DF                        cmp edi, ebx            ; if y = height then mask else exit
-    68 00000065 7CBD                        jl mask
-    69 00000067 7D09                        jge exit
-    70                                  
-    71 00000069 8B5D1C                      mov ebx, [ebp + 28]     ; mask_height
-    72 0000006C 39DF                        cmp edi, ebx            ; if y = mask_height then mask else exit
-    73 0000006E 7CB4                        jl mask
-    74 00000070 7D00                        jge exit
+    59                                  
+    60                                      ; kopiowanie koloru z maski do obrazu
+    61 00000052 8B4D08                      mov ecx, [ebp + 8]      ; ecx = img
+    62 00000055 8B5514                      mov edx, [ebp + 20]     ; edx = mask_img
+    63 00000058 8A043A                      mov al, [edx + edi]     ; save B of pixel in mask_img to al
+    64 0000005B 880419                      mov [ecx + ebx], al     ; save B of pixel in mask as al
+    65 0000005E 8A443A01                    mov al, [edx + edi + 1] ; save G of pixel in mask_img to al
+    66 00000062 88441901                    mov [ecx + ebx + 1], al ; save G of pixel in mask as al
+    67 00000066 8A443A02                    mov al, [edx + edi + 2] ; save R of pixel in mask_img to al
+    68 0000006A 88441902                    mov [ecx + ebx + 2], al ; save R of pixel in mask as al
+    69                                  
+    70 0000006E 46                          inc esi     ; increment x
+    71 0000006F 8B0424                      mov eax, [esp + 0]
+    72 00000072 40                          inc eax             ; increment x_mask
+    73 00000073 890424                      mov [esp + 0], eax
+    74 00000076 EBA3                        jmp mask
     75                                  
-    76                                  exit:
-    77 00000072 83C408                      add esp, 8
-    78 00000075 5F                          pop edi
-    79 00000076 5E                          pop esi
-    80 00000077 5B                          pop ebx
-    81 00000078 5D                          pop ebp
-    82 00000079 C3                          ret
+    76                                  next_row:
+    77 00000078 8B7520                      mov esi, [ebp + 32]     ; set current x as given x
+    78 0000007B C7042400000000              mov dword [esp + 0], 0  ; set current x_mask as given x_mask
+    79                                  
+    80 00000082 8B4524                      mov eax, [ebp + 36]
+    81 00000085 40                          inc eax                 ; inc y
+    82 00000086 894524                      mov [ebp + 36], eax
+    83                                  
+    84 00000089 8B442404                    mov eax, [esp + 4]
+    85 0000008D 40                          inc eax                 ; inc y_mask
+    86 0000008E 89442404                    mov [esp + 4], eax
+    87                                  
+    88 00000092 8B5D10                      mov ebx, [ebp + 16]     ; height
+    89 00000095 395D24                      cmp [ebp + 36], ebx            ; if y = height then mask else exit
+    90 00000098 7D0E                        jge exit
+    91                                  
+    92 0000009A 8B5D1C                      mov ebx, [ebp + 28]     ; mask_height
+    93 0000009D 395C2404                    cmp [esp + 4], ebx            ; if y_mask = mask_height then mask else exit
+    94 000000A1 7D05                        jge exit
+    95                                  
+    96 000000A3 E973FFFFFF                  jmp mask
+    97                                  
+    98                                  exit:
+    99 000000A8 83C408                      add esp, 8
+   100 000000AB 5F                          pop edi
+   101 000000AC 5E                          pop esi
+   102 000000AD 5B                          pop ebx
+   103 000000AE 5D                          pop ebp
+   104 000000AF C3                          ret
