@@ -82,10 +82,7 @@ mask:
 
     add eax, edx
     add eax, ecx
-    cmp eax, 255
-    jle skip_clamp_r
-    mov eax, 255
-    skip_clamp_r:
+    and eax, 0xFF
     mov ebx, [esp + 8]
     mov ecx, [ebp + 8]
     mov [ecx + ebx + 2], al
@@ -115,10 +112,7 @@ mask:
 
     add eax, edx
     add eax, ecx
-    cmp eax, 255
-    jle skip_clamp_g
-    mov eax, 255
-    skip_clamp_g:
+    and eax, 0xFF
     mov ebx, [esp + 8]
     mov ecx, [ebp + 8]
     mov [ecx + ebx + 1], al
@@ -145,10 +139,7 @@ mask:
 
     add eax, edx
     add eax, ecx
-    cmp eax, 255
-    jle skip_clamp_b
-    mov eax, 255
-    skip_clamp_b:
+    and eax, 0xFF
     mov ebx, [esp + 8]
     mov ecx, [ebp + 8]
     mov [ecx + ebx], al

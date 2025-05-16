@@ -31,11 +31,11 @@
     31                                  mask:
     32 0000002B 8B4518                      mov eax, [ebp + 24]     ; eax = mask_width
     33 0000002E 390424                      cmp [esp + 0], eax            ; if x_mask = mask_width then next_row
-    34 00000031 0F8D53010000                jge next_row
+    34 00000031 0F8D3E010000                jge next_row
     35                                  
     36 00000037 8B450C                      mov eax, [ebp + 12]     ; eax = width
     37 0000003A 39C6                        cmp esi, eax            ; if x = width then next_row
-    38 0000003C 0F8D48010000                jge next_row
+    38 0000003C 0F8D33010000                jge next_row
     39                                  
     40 00000042 8B7D24                      mov edi, [ebp + 36]     ; edi = current y
     41                                  
@@ -82,112 +82,103 @@
     82                                  
     83 000000B2 01D0                        add eax, edx
     84 000000B4 01C8                        add eax, ecx
-    85 000000B6 3DFF000000                  cmp eax, 255
-    86 000000BB 7E05                        jle skip_clamp_r
-    87 000000BD B8FF000000                  mov eax, 255
-    88                                      skip_clamp_r:
-    89 000000C2 8B5C2408                    mov ebx, [esp + 8]
-    90 000000C6 8B4D08                      mov ecx, [ebp + 8]
-    91 000000C9 88441902                    mov [ecx + ebx + 2], al
-    92                                  
-    93                                  
-    94                                      ; === GREEN ===
-    95 000000CD 8B5D14                      mov ebx, [ebp + 20]     ; ebx = mask_img
-    96 000000D0 8B7C240C                    mov edi, [esp + 12]
-    97 000000D4 0FB6443B02                  movzx eax, byte [ebx + edi + 2]
-    98 000000D9 0FB6543B01                  movzx edx, byte [ebx + edi + 1]
-    99 000000DE 0FB60C3B                    movzx ecx, byte [ebx + edi]
-   100                                  
-   101 000000E2 8B5D28                      mov ebx, [ebp + 40]
-   102 000000E5 C1EB08                      shr ebx, 8
-   103 000000E8 81E3FF000000                and ebx, 0xFF
-   104 000000EE 0FAFC3                      imul eax, ebx
-   105                                  
-   106 000000F1 8B5D2C                      mov ebx, [ebp + 44]
-   107 000000F4 C1EB08                      shr ebx, 8
-   108 000000F7 81E3FF000000                and ebx, 0xFF
-   109 000000FD 0FAFD3                      imul edx, ebx
-   110                                  
-   111 00000100 8B5D30                      mov ebx, [ebp + 48]
-   112 00000103 C1EB08                      shr ebx, 8
-   113 00000106 81E3FF000000                and ebx, 0xFF
-   114 0000010C 0FAFCB                      imul ecx, ebx
-   115                                  
-   116 0000010F 01D0                        add eax, edx
-   117 00000111 01C8                        add eax, ecx
-   118 00000113 3DFF000000                  cmp eax, 255
-   119 00000118 7E05                        jle skip_clamp_g
-   120 0000011A B8FF000000                  mov eax, 255
-   121                                      skip_clamp_g:
-   122 0000011F 8B5C2408                    mov ebx, [esp + 8]
-   123 00000123 8B4D08                      mov ecx, [ebp + 8]
-   124 00000126 88441901                    mov [ecx + ebx + 1], al
-   125                                  
-   126                                  
-   127                                      ; === BLUE ===
-   128 0000012A 8B5D14                      mov ebx, [ebp + 20]     ; ebx = mask_img
-   129 0000012D 8B7C240C                    mov edi, [esp + 12]
-   130 00000131 0FB6443B02                  movzx eax, byte [ebx + edi + 2]
-   131 00000136 0FB6543B01                  movzx edx, byte [ebx + edi + 1]
-   132 0000013B 0FB60C3B                    movzx ecx, byte [ebx + edi]
-   133                                  
-   134 0000013F 8B5D28                      mov ebx, [ebp + 40]
-   135 00000142 81E3FF000000                and ebx, 0xFF
-   136 00000148 0FAFC3                      imul eax, ebx
-   137                                  
-   138 0000014B 8B5D2C                      mov ebx, [ebp + 44]
-   139 0000014E 81E3FF000000                and ebx, 0xFF
-   140 00000154 0FAFD3                      imul edx, ebx
-   141                                  
-   142 00000157 8B5D30                      mov ebx, [ebp + 48]
-   143 0000015A 81E3FF000000                and ebx, 0xFF
-   144 00000160 0FAFCB                      imul ecx, ebx
-   145                                  
-   146 00000163 01D0                        add eax, edx
-   147 00000165 01C8                        add eax, ecx
-   148 00000167 3DFF000000                  cmp eax, 255
-   149 0000016C 7E05                        jle skip_clamp_b
-   150 0000016E B8FF000000                  mov eax, 255
-   151                                      skip_clamp_b:
-   152 00000173 8B5C2408                    mov ebx, [esp + 8]
-   153 00000177 8B4D08                      mov ecx, [ebp + 8]
-   154 0000017A 880419                      mov [ecx + ebx], al
+    85 000000B6 25FF000000                  and eax, 0xFF
+    86 000000BB 8B5C2408                    mov ebx, [esp + 8]
+    87 000000BF 8B4D08                      mov ecx, [ebp + 8]
+    88 000000C2 88441902                    mov [ecx + ebx + 2], al
+    89                                  
+    90                                  
+    91                                      ; === GREEN ===
+    92 000000C6 8B5D14                      mov ebx, [ebp + 20]     ; ebx = mask_img
+    93 000000C9 8B7C240C                    mov edi, [esp + 12]
+    94 000000CD 0FB6443B02                  movzx eax, byte [ebx + edi + 2]
+    95 000000D2 0FB6543B01                  movzx edx, byte [ebx + edi + 1]
+    96 000000D7 0FB60C3B                    movzx ecx, byte [ebx + edi]
+    97                                  
+    98 000000DB 8B5D28                      mov ebx, [ebp + 40]
+    99 000000DE C1EB08                      shr ebx, 8
+   100 000000E1 81E3FF000000                and ebx, 0xFF
+   101 000000E7 0FAFC3                      imul eax, ebx
+   102                                  
+   103 000000EA 8B5D2C                      mov ebx, [ebp + 44]
+   104 000000ED C1EB08                      shr ebx, 8
+   105 000000F0 81E3FF000000                and ebx, 0xFF
+   106 000000F6 0FAFD3                      imul edx, ebx
+   107                                  
+   108 000000F9 8B5D30                      mov ebx, [ebp + 48]
+   109 000000FC C1EB08                      shr ebx, 8
+   110 000000FF 81E3FF000000                and ebx, 0xFF
+   111 00000105 0FAFCB                      imul ecx, ebx
+   112                                  
+   113 00000108 01D0                        add eax, edx
+   114 0000010A 01C8                        add eax, ecx
+   115 0000010C 25FF000000                  and eax, 0xFF
+   116 00000111 8B5C2408                    mov ebx, [esp + 8]
+   117 00000115 8B4D08                      mov ecx, [ebp + 8]
+   118 00000118 88441901                    mov [ecx + ebx + 1], al
+   119                                  
+   120                                  
+   121                                      ; === BLUE ===
+   122 0000011C 8B5D14                      mov ebx, [ebp + 20]     ; ebx = mask_img
+   123 0000011F 8B7C240C                    mov edi, [esp + 12]
+   124 00000123 0FB6443B02                  movzx eax, byte [ebx + edi + 2]
+   125 00000128 0FB6543B01                  movzx edx, byte [ebx + edi + 1]
+   126 0000012D 0FB60C3B                    movzx ecx, byte [ebx + edi]
+   127                                  
+   128 00000131 8B5D28                      mov ebx, [ebp + 40]
+   129 00000134 81E3FF000000                and ebx, 0xFF
+   130 0000013A 0FAFC3                      imul eax, ebx
+   131                                  
+   132 0000013D 8B5D2C                      mov ebx, [ebp + 44]
+   133 00000140 81E3FF000000                and ebx, 0xFF
+   134 00000146 0FAFD3                      imul edx, ebx
+   135                                  
+   136 00000149 8B5D30                      mov ebx, [ebp + 48]
+   137 0000014C 81E3FF000000                and ebx, 0xFF
+   138 00000152 0FAFCB                      imul ecx, ebx
+   139                                  
+   140 00000155 01D0                        add eax, edx
+   141 00000157 01C8                        add eax, ecx
+   142 00000159 25FF000000                  and eax, 0xFF
+   143 0000015E 8B5C2408                    mov ebx, [esp + 8]
+   144 00000162 8B4D08                      mov ecx, [ebp + 8]
+   145 00000165 880419                      mov [ecx + ebx], al
+   146                                  
+   147                                  
+   148 00000168 46                          inc esi     ; increment x
+   149 00000169 8B0424                      mov eax, [esp + 0]
+   150 0000016C 40                          inc eax             ; increment x_mask
+   151 0000016D 890424                      mov [esp + 0], eax
+   152 00000170 E9B6FEFFFF                  jmp mask
+   153                                  
+   154                                  
    155                                  
-   156                                  
-   157 0000017D 46                          inc esi     ; increment x
-   158 0000017E 8B0424                      mov eax, [esp + 0]
-   159 00000181 40                          inc eax             ; increment x_mask
-   160 00000182 890424                      mov [esp + 0], eax
-   161 00000185 E9A1FEFFFF                  jmp mask
-   162                                  
+   156                                  next_row:
+   157 00000175 8B7520                      mov esi, [ebp + 32]     ; set current x as given x
+   158 00000178 C7042400000000              mov dword [esp + 0], 0  ; set current x_mask as given x_mask
+   159                                  
+   160 0000017F 8B4524                      mov eax, [ebp + 36]
+   161 00000182 40                          inc eax                 ; inc y
+   162 00000183 894524                      mov [ebp + 36], eax
    163                                  
-   164                                  
-   165                                  next_row:
-   166 0000018A 8B7520                      mov esi, [ebp + 32]     ; set current x as given x
-   167 0000018D C7042400000000              mov dword [esp + 0], 0  ; set current x_mask as given x_mask
-   168                                  
-   169 00000194 8B4524                      mov eax, [ebp + 36]
-   170 00000197 40                          inc eax                 ; inc y
-   171 00000198 894524                      mov [ebp + 36], eax
-   172                                  
-   173 0000019B 8B442404                    mov eax, [esp + 4]
-   174 0000019F 40                          inc eax                 ; inc y_mask
-   175 000001A0 89442404                    mov [esp + 4], eax
-   176                                  
-   177 000001A4 8B5D10                      mov ebx, [ebp + 16]     ; height
-   178 000001A7 395D24                      cmp [ebp + 36], ebx            ; if y = height then mask else exit
-   179 000001AA 7D0E                        jge exit
-   180                                  
-   181 000001AC 8B5D1C                      mov ebx, [ebp + 28]     ; mask_height
-   182 000001AF 395C2404                    cmp [esp + 4], ebx            ; if y_mask = mask_height then mask else exit
-   183 000001B3 7D05                        jge exit
-   184                                  
-   185 000001B5 E971FEFFFF                  jmp mask
-   186                                  
-   187                                  exit:
-   188 000001BA 83C410                      add esp, 16
-   189 000001BD 5F                          pop edi
-   190 000001BE 5E                          pop esi
-   191 000001BF 5B                          pop ebx
-   192 000001C0 5D                          pop ebp
-   193 000001C1 C3                          ret
+   164 00000186 8B442404                    mov eax, [esp + 4]
+   165 0000018A 40                          inc eax                 ; inc y_mask
+   166 0000018B 89442404                    mov [esp + 4], eax
+   167                                  
+   168 0000018F 8B5D10                      mov ebx, [ebp + 16]     ; height
+   169 00000192 395D24                      cmp [ebp + 36], ebx            ; if y = height then mask else exit
+   170 00000195 7D0E                        jge exit
+   171                                  
+   172 00000197 8B5D1C                      mov ebx, [ebp + 28]     ; mask_height
+   173 0000019A 395C2404                    cmp [esp + 4], ebx            ; if y_mask = mask_height then mask else exit
+   174 0000019E 7D05                        jge exit
+   175                                  
+   176 000001A0 E986FEFFFF                  jmp mask
+   177                                  
+   178                                  exit:
+   179 000001A5 83C410                      add esp, 16
+   180 000001A8 5F                          pop edi
+   181 000001A9 5E                          pop esi
+   182 000001AA 5B                          pop ebx
+   183 000001AB 5D                          pop ebp
+   184 000001AC C3                          ret
