@@ -7,7 +7,7 @@ colormask:
     push ebx
     push esi
     push edi
-    sub esp, 8
+    sub esp, 16
 
     ; [ebp + 8] = img (void *)
     ; [ebp + 12] = width (uint32_t)
@@ -25,7 +25,8 @@ colormask:
 
     mov dword [esp + 0], 0  ; x_mask
     mov dword [esp + 4], 0  ; y_mask
-
+    mov dword [esp + 8], 0
+    mov dword [esp + 12], 0
 
 mask:
     mov eax, [ebp + 24]     ; eax = mask_width
@@ -38,12 +39,13 @@ mask:
 
     mov edi, [ebp + 36]     ; edi = current y
 
-    mov ebx, [ebp + 16]     ; ebx = height
-    dec ebx                 ; ebx -= 1
-    sub ebx, edi            ; y = height - 1 - y
-    imul ebx, [ebp + 12]    ; y * width
-    add ebx, esi            ; + x
-    imul ebx, 3             ; offset w bajtach
+    mov eax, [ebp + 16]     ; eax = height
+    dec eax                 ; eax -= 1
+    sub eax, edi            ; y = height - 1 - y
+    imul eax, [ebp + 12]    ; y * width
+    add eax, esi            ; + x
+    imul eax, 3             ; offset w bajtach
+    mov [esp + 8], eax
 
     mov edi, [esp + 4]
 
@@ -53,25 +55,112 @@ mask:
     imul eax, [ebp + 24]    ; y_mask * mask_width
     add eax, [esp + 0]      ; + x_mask
     imul eax, 3             ; offset w bajtach
+    mov [esp + 12], eax
 
-    mov edi, eax
+
+    ; === RED ===
+    mov ebx, [ebp + 20]     ; ebx = mask_img
+    mov edi, [esp + 12]
+    movzx eax, byte [ebx + edi + 2]
+    movzx edx, byte [ebx + edi + 1]
+    movzx ecx, byte [ebx + edi]
+
+    mov ebx, [ebp + 40]
+    shr ebx, 16
+    and ebx, 0xFF
+    imul eax, ebx
+
+    mov ebx, [ebp + 44]
+    shr ebx, 16
+    and ebx, 0xFF
+    imul edx, ebx
+
+    mov ebx, [ebp + 48]
+    shr ebx, 16
+    and ebx, 0xFF
+    imul ecx, ebx
+
+    add eax, edx
+    add eax, ecx
+    cmp eax, 255
+    jle skip_clamp_r
+    mov eax, 255
+    skip_clamp_r:
+    mov ebx, [esp + 8]
+    mov ecx, [ebp + 8]
+    mov [ecx + ebx + 2], al
 
 
-    ; kopiowanie koloru z maski do obrazu
-    mov ecx, [ebp + 8]      ; ecx = img
-    mov edx, [ebp + 20]     ; edx = mask_img
-    mov al, [edx + edi]     ; save B of pixel in mask_img to al
-    mov [ecx + ebx], al     ; save B of pixel in mask as al
-    mov al, [edx + edi + 1] ; save G of pixel in mask_img to al
-    mov [ecx + ebx + 1], al ; save G of pixel in mask as al
-    mov al, [edx + edi + 2] ; save R of pixel in mask_img to al
-    mov [ecx + ebx + 2], al ; save R of pixel in mask as al
+    ; === GREEN ===
+    mov ebx, [ebp + 20]     ; ebx = mask_img
+    mov edi, [esp + 12]
+    movzx eax, byte [ebx + edi + 2]
+    movzx edx, byte [ebx + edi + 1]
+    movzx ecx, byte [ebx + edi]
+
+    mov ebx, [ebp + 40]
+    shr ebx, 8
+    and ebx, 0xFF
+    imul eax, ebx
+
+    mov ebx, [ebp + 44]
+    shr ebx, 8
+    and ebx, 0xFF
+    imul edx, ebx
+
+    mov ebx, [ebp + 48]
+    shr ebx, 8
+    and ebx, 0xFF
+    imul ecx, ebx
+
+    add eax, edx
+    add eax, ecx
+    cmp eax, 255
+    jle skip_clamp_g
+    mov eax, 255
+    skip_clamp_g:
+    mov ebx, [esp + 8]
+    mov ecx, [ebp + 8]
+    mov [ecx + ebx + 1], al
+
+
+    ; === BLUE ===
+    mov ebx, [ebp + 20]     ; ebx = mask_img
+    mov edi, [esp + 12]
+    movzx eax, byte [ebx + edi + 2]
+    movzx edx, byte [ebx + edi + 1]
+    movzx ecx, byte [ebx + edi]
+
+    mov ebx, [ebp + 40]
+    and ebx, 0xFF
+    imul eax, ebx
+
+    mov ebx, [ebp + 44]
+    and ebx, 0xFF
+    imul edx, ebx
+
+    mov ebx, [ebp + 48]
+    and ebx, 0xFF
+    imul ecx, ebx
+
+    add eax, edx
+    add eax, ecx
+    cmp eax, 255
+    jle skip_clamp_b
+    mov eax, 255
+    skip_clamp_b:
+    mov ebx, [esp + 8]
+    mov ecx, [ebp + 8]
+    mov [ecx + ebx], al
+
 
     inc esi     ; increment x
     mov eax, [esp + 0]
     inc eax             ; increment x_mask
     mov [esp + 0], eax
     jmp mask
+
+
 
 next_row:
     mov esi, [ebp + 32]     ; set current x as given x
@@ -96,7 +185,7 @@ next_row:
     jmp mask
 
 exit:
-    add esp, 8
+    add esp, 16
     pop edi
     pop esi
     pop ebx
