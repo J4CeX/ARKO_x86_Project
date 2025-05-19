@@ -80,24 +80,12 @@ mask:
     and ebx, 0xFF
     imul ecx, ebx       ; ecx = red(color3) * blue(mask_img)
 
-<<<<<<< HEAD
     add eax, edx        ; eax = eax + edx = red(color1) * red(mask_img) + red(color2) * green(mask_img)
     add eax, ecx        ; eax = eax + ecx = red(color1) * red(mask_img) + red(color2) * green(mask_img) + ecx = red(color3) * blue(mask_img)
     and eax, 0xFF       ; cut result to last 8bit
     mov ebx, [esp + 8]  ; ebx = img_offset
     mov ecx, [ebp + 8]  ; ecx = img
     mov [ecx + ebx + 2], al ; red(img) = ...
-=======
-    add eax, edx
-    add eax, ecx
-    shr eax, 6
-    and eax, 0x03
-    shl eax, 6
-    mov ebx, [esp + 8]
-    mov ecx, [ebp + 8]
-    mov [ecx + ebx + 2], al
->>>>>>> 0aff60a13d626fa60771ce4897e8adc365d338b5
-
 
     ; --- GREEN ---
     mov ebx, [ebp + 20]     ; ebx = mask_img
@@ -121,24 +109,12 @@ mask:
     and ebx, 0xFF
     imul ecx, ebx       ; ecx = green(color3) * blue(mask_img)
 
-<<<<<<< HEAD
     add eax, edx        ; eax = eax + edx = green(color1) * red(mask_img) + green(color2) * green(mask_img)
     add eax, ecx        ; eax = eax + ecx = green(color1) * red(mask_img) + green(color2) * green(mask_img) + ecx = green(color3) * blue(mask_img)
     and eax, 0xFF       ; cut result to last 8bit
     mov ebx, [esp + 8]  ; ebx = img_offset
     mov ecx, [ebp + 8]  ; ecx = img
     mov [ecx + ebx + 1], al ; green(img) = ...
-=======
-    add eax, edx
-    add eax, ecx
-    shr eax, 6
-    and eax, 0x03
-    shl eax, 6
-    mov ebx, [esp + 8]
-    mov ecx, [ebp + 8]
-    mov [ecx + ebx + 1], al
->>>>>>> 0aff60a13d626fa60771ce4897e8adc365d338b5
-
 
     ; --- BLUE ---
     mov ebx, [ebp + 20]     ; ebx = mask_img
@@ -159,24 +135,12 @@ mask:
     and ebx, 0xFF       ; select BB
     imul ecx, ebx       ; edx = blue(color3) * blue(mask_img)
 
-<<<<<<< HEAD
     add eax, edx        ; eax = eax + edx = green(color1) * red(mask_img) + green(color2) * green(mask_img)
     add eax, ecx        ; eax = eax + ecx = green(color1) * red(mask_img) + green(color2) * green(mask_img) + ecx = green(color3) * blue(mask_img)
     and eax, 0xFF       ; cut result to last 8bit
     mov ebx, [esp + 8]  ; ebx = img_offset
     mov ecx, [ebp + 8]  ; ecx = img
     mov [ecx + ebx], al ; blue(img) = ...
-=======
-    add eax, edx
-    add eax, ecx
-    shr eax, 6
-    and eax, 0x03
-    shl eax, 6
-    mov ebx, [esp + 8]
-    mov ecx, [ebp + 8]
-    mov [ecx + ebx], al
->>>>>>> 0aff60a13d626fa60771ce4897e8adc365d338b5
-
 
     inc esi     ; increment x
     mov eax, [esp + 0]
