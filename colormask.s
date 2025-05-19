@@ -25,12 +25,12 @@ colormask:
 
     mov dword [esp + 0], 0  ; x_mask
     mov dword [esp + 4], 0  ; y_mask
-    mov dword [esp + 8], 0
-    mov dword [esp + 12], 0
+    mov dword [esp + 8], 0  ; img_offset
+    mov dword [esp + 12], 0 ; mask_offset
 
 mask:
     mov eax, [ebp + 24]     ; eax = mask_width
-    cmp [esp + 0], eax            ; if x_mask = mask_width then next_row
+    cmp [esp + 0], eax      ; if x_mask = mask_width then next_row
     jge next_row
 
     mov eax, [ebp + 12]     ; eax = width
@@ -58,91 +58,91 @@ mask:
     mov [esp + 12], eax
 
 
-    ; === RED ===
+    ; --- RED ---
     mov ebx, [ebp + 20]     ; ebx = mask_img
-    mov edi, [esp + 12]
-    movzx eax, byte [ebx + edi + 2]
-    movzx edx, byte [ebx + edi + 1]
-    movzx ecx, byte [ebx + edi]
+    mov edi, [esp + 12]     ; edi = mask_offset
+    movzx eax, byte [ebx + edi + 2] ; save mask RR to eax
+    movzx edx, byte [ebx + edi + 1] ; save mask GG to edx
+    movzx ecx, byte [ebx + edi]     ; save mask BB to ecx
 
-    mov ebx, [ebp + 40]
-    shr ebx, 16
+    mov ebx, [ebp + 40] ; ebx = color1
+    shr ebx, 16         ; select RR
     and ebx, 0xFF
-    imul eax, ebx
+    imul eax, ebx       ; eax = red(color1) * red(mask_img)
 
-    mov ebx, [ebp + 44]
-    shr ebx, 16
+    mov ebx, [ebp + 44] ; ebx = color2
+    shr ebx, 16         ; select RR
     and ebx, 0xFF
-    imul edx, ebx
+    imul edx, ebx       ; edx = red(color2) * green(mask_img)
 
-    mov ebx, [ebp + 48]
-    shr ebx, 16
+    mov ebx, [ebp + 48] ; ebx = color3
+    shr ebx, 16         ; select RR
     and ebx, 0xFF
-    imul ecx, ebx
+    imul ecx, ebx       ; ecx = red(color3) * blue(mask_img)
 
-    add eax, edx
-    add eax, ecx
-    and eax, 0xFF
-    mov ebx, [esp + 8]
-    mov ecx, [ebp + 8]
-    mov [ecx + ebx + 2], al
+    add eax, edx        ; eax = eax + edx = red(color1) * red(mask_img) + red(color2) * green(mask_img)
+    add eax, ecx        ; eax = eax + ecx = red(color1) * red(mask_img) + red(color2) * green(mask_img) + ecx = red(color3) * blue(mask_img)
+    and eax, 0xFF       ; cut result to last 8bit
+    mov ebx, [esp + 8]  ; ebx = img_offset
+    mov ecx, [ebp + 8]  ; ecx = img
+    mov [ecx + ebx + 2], al ; red(img) = ...
 
 
-    ; === GREEN ===
+    ; --- GREEN ---
     mov ebx, [ebp + 20]     ; ebx = mask_img
-    mov edi, [esp + 12]
-    movzx eax, byte [ebx + edi + 2]
-    movzx edx, byte [ebx + edi + 1]
-    movzx ecx, byte [ebx + edi]
+    mov edi, [esp + 12]     ; edi = mask_offset
+    movzx eax, byte [ebx + edi + 2] ; save mask RR to eax
+    movzx edx, byte [ebx + edi + 1] ; save mask GG to edx
+    movzx ecx, byte [ebx + edi]     ; save mask BB to ecx
 
-    mov ebx, [ebp + 40]
-    shr ebx, 8
+    mov ebx, [ebp + 40] ; ebx = color1
+    shr ebx, 8          ; select GG
     and ebx, 0xFF
-    imul eax, ebx
+    imul eax, ebx       ; eax = green(color1) * red(mask_img)
 
-    mov ebx, [ebp + 44]
-    shr ebx, 8
+    mov ebx, [ebp + 44] ; ebx = color2
+    shr ebx, 8          ; select GG
     and ebx, 0xFF
-    imul edx, ebx
+    imul edx, ebx       ; edx = green(color2) * green(mask_img)
 
-    mov ebx, [ebp + 48]
-    shr ebx, 8
+    mov ebx, [ebp + 48] ; ebx = color3
+    shr ebx, 8          ; select GG
     and ebx, 0xFF
-    imul ecx, ebx
+    imul ecx, ebx       ; ecx = green(color3) * blue(mask_img)
 
-    add eax, edx
-    add eax, ecx
-    and eax, 0xFF
-    mov ebx, [esp + 8]
-    mov ecx, [ebp + 8]
-    mov [ecx + ebx + 1], al
+    add eax, edx        ; eax = eax + edx = green(color1) * red(mask_img) + green(color2) * green(mask_img)
+    add eax, ecx        ; eax = eax + ecx = green(color1) * red(mask_img) + green(color2) * green(mask_img) + ecx = green(color3) * blue(mask_img)
+    and eax, 0xFF       ; cut result to last 8bit
+    mov ebx, [esp + 8]  ; ebx = img_offset
+    mov ecx, [ebp + 8]  ; ecx = img
+    mov [ecx + ebx + 1], al ; green(img) = ...
 
 
-    ; === BLUE ===
+    ; --- BLUE ---
     mov ebx, [ebp + 20]     ; ebx = mask_img
-    mov edi, [esp + 12]
-    movzx eax, byte [ebx + edi + 2]
-    movzx edx, byte [ebx + edi + 1]
-    movzx ecx, byte [ebx + edi]
+    mov edi, [esp + 12]     ; edi = mask_offset
+    movzx eax, byte [ebx + edi + 2] ; save mask RR to eax
+    movzx edx, byte [ebx + edi + 1] ; save mask GG to edx
+    movzx ecx, byte [ebx + edi]     ; save mask BB to ecx
 
-    mov ebx, [ebp + 40]
-    and ebx, 0xFF
-    imul eax, ebx
+    mov ebx, [ebp + 40] ; ebx = color1
+    and ebx, 0xFF       ; select BB
+    imul eax, ebx       ; edx = blue(color1) * red(mask_img)
 
-    mov ebx, [ebp + 44]
-    and ebx, 0xFF
-    imul edx, ebx
+    mov ebx, [ebp + 44] ; ebx = color2
+    and ebx, 0xFF       ; select BB
+    imul edx, ebx       ; eax = blue(color2) * green(mask_img)
 
-    mov ebx, [ebp + 48]
-    and ebx, 0xFF
-    imul ecx, ebx
+    mov ebx, [ebp + 48] ; ebx = color3
+    and ebx, 0xFF       ; select BB
+    imul ecx, ebx       ; edx = blue(color3) * blue(mask_img)
 
-    add eax, edx
-    add eax, ecx
-    and eax, 0xFF
-    mov ebx, [esp + 8]
-    mov ecx, [ebp + 8]
-    mov [ecx + ebx], al
+    add eax, edx        ; eax = eax + edx = green(color1) * red(mask_img) + green(color2) * green(mask_img)
+    add eax, ecx        ; eax = eax + ecx = green(color1) * red(mask_img) + green(color2) * green(mask_img) + ecx = green(color3) * blue(mask_img)
+    and eax, 0xFF       ; cut result to last 8bit
+    mov ebx, [esp + 8]  ; ebx = img_offset
+    mov ecx, [ebp + 8]  ; ecx = img
+    mov [ecx + ebx], al ; blue(img) = ...
 
 
     inc esi     ; increment x
@@ -166,16 +166,17 @@ next_row:
     mov [esp + 4], eax
 
     mov ebx, [ebp + 16]     ; height
-    cmp [ebp + 36], ebx            ; if y = height then mask else exit
+    cmp [ebp + 36], ebx     ; if y = height then mask else exit
     jge exit
 
     mov ebx, [ebp + 28]     ; mask_height
-    cmp [esp + 4], ebx            ; if y_mask = mask_height then mask else exit
+    cmp [esp + 4], ebx      ; if y_mask = mask_height then mask else exit
     jge exit
 
     jmp mask
 
 exit:
+    ; epilogue
     add esp, 16
     pop edi
     pop esi
