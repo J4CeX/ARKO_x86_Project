@@ -29,7 +29,7 @@ typedef struct {
 void *load_bmp_pixels(const char *filename, uint32_t *width, uint32_t *height, uint32_t *offset, uint8_t **raw_buf) {
     FILE *f = fopen(filename, "rb");
     if (!f) {
-        perror("Błąd otwierania pliku");
+        perror("File open error");
         return NULL;
     }
 
@@ -39,7 +39,7 @@ void *load_bmp_pixels(const char *filename, uint32_t *width, uint32_t *height, u
     fread(&dib, sizeof(dib), 1, f);
 
     if (bmp.type != 0x4D42 || dib.bpp != 24) {
-        fprintf(stderr, "Nieobsługiwany format BMP\n");
+        fprintf(stderr, "Wrong BMP format\n");
         fclose(f);
         return NULL;
     }
@@ -56,7 +56,6 @@ void *load_bmp_pixels(const char *filename, uint32_t *width, uint32_t *height, u
     return *raw_buf + *offset;
 }
 
-// Funkcja do przekształcania
 void colormask(void *img, uint32_t width, uint32_t height,
                void *mask_img, uint32_t mask_width, uint32_t mask_height,
                uint32_t x, uint32_t y,
@@ -64,15 +63,15 @@ void colormask(void *img, uint32_t width, uint32_t height,
 
 int main(int argc, char *argv[]) {
     if (argc != 6) {
-        fprintf(stderr, "Użycie: %s x y color1 color2 color3 (kolory w hex)\n", argv[0]);
+        fprintf(stderr, "Use: %s x y color1 color2 color3 (colors w hex)\n", argv[0]);
         return 1;
     }
 
-    uint32_t x = (uint32_t)strtoul(argv[1], NULL, 10); // Wczytaj x jako dziesiętną
-    uint32_t y = (uint32_t)strtoul(argv[2], NULL, 10); // Wczytaj y jako dziesiętną
-    uint32_t color1 = (uint32_t)strtoul(argv[3], NULL, 16); // color1 w hex (np. 0xFF0000)
-    uint32_t color2 = (uint32_t)strtoul(argv[4], NULL, 16); // color2 w hex (np. 0x00FF00)
-    uint32_t color3 = (uint32_t)strtoul(argv[5], NULL, 16); // color3 w hex (np. 0x0000FF)
+    uint32_t x = (uint32_t)strtoul(argv[1], NULL, 10); // Input x as decimal
+    uint32_t y = (uint32_t)strtoul(argv[2], NULL, 10); // Input y as decimal
+    uint32_t color1 = (uint32_t)strtoul(argv[3], NULL, 16); // color1 hex
+    uint32_t color2 = (uint32_t)strtoul(argv[4], NULL, 16); // color2 hex
+    uint32_t color3 = (uint32_t)strtoul(argv[5], NULL, 16); // color3 hex
 
     uint32_t width, height, offset;
     uint8_t *img_buf;
@@ -91,7 +90,7 @@ int main(int argc, char *argv[]) {
 
     FILE *out = fopen("img.bmp", "wb");
     if (!out) {
-        perror("Błąd zapisu");
+        perror("Saving error");
         return 1;
     }
     int row_bytes = ((width * 3 + 3) & ~3);
